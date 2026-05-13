@@ -1,243 +1,145 @@
-# coarse
+# coarse-opencode
 
-[![CI](https://github.com/Davidvandijcke/coarse/actions/workflows/ci.yml/badge.svg)](https://github.com/Davidvandijcke/coarse/actions/workflows/ci.yml)
-[![PyPI](https://img.shields.io/pypi/v/coarse-ink)](https://pypi.org/project/coarse-ink/)
-[![Downloads](https://img.shields.io/endpoint?url=https%3A%2F%2Fcoarse.ink%2Fapi%2Fdownloads)](https://pypistats.org/packages/coarse-ink)
-[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/github/license/Davidvandijcke/coarse)](LICENSE)
+**OpenCode-native academic paper reviewer** — a fork of [coarse](https://github.com/Davidvandijcke/coarse) that uses your OpenCode subscription instead of OpenRouter API keys.
 
-Free, open-source AI academic paper reviewer that outperforms popular paid AI reviewers.
-
-You provide your own API key and pay the LLM provider directly — typically **under $2 per review**.
-
-Don't want to run it locally? Use the [web interface](https://coarse.vercel.app/) instead.
-
-## Quickstart
-
-Get an API key from [OpenRouter](https://openrouter.ai/keys) (free to sign up), then:
+## Quick Start
 
 ```bash
-uvx coarse-ink review paper.pdf --api-key sk-or-v1-YOUR_KEY
+# 1. Clone this fork
+git clone https://github.com/YOUR_USERNAME/coarse-opencode.git
+cd coarse-opencode
+
+# 2. Install the skill
+./install.sh
+
+# 3. Use it in OpenCode
+/coarse-review path/to/paper.md
 ```
 
-That's it. The review is written to `paper_review.md` in the current directory.
+## What Changed
 
-### Prerequisites
+| Feature | Original coarse | This fork |
+|---------|----------------|-----------|
+| LLM backend | OpenRouter API (paid per review) | Your OpenCode subscription |
+| Text extraction | Mistral OCR via OpenRouter | Native file reading (no API) |
+| Required keys | `OPENROUTER_API_KEY` | None for text inputs |
+| PDF support | Yes (with OCR) | Convert to text first |
+| Parallel agents | Python ThreadPool | OpenCode native `task()` |
+| Cost per review | ~$0.25–$2.00 | OpenCode quota only |
+| Setup time | 5-10 min (API keys, config) | 1 min (just install skill) |
 
-coarse requires Python 3.12+. If you don't have `uvx`, install [uv](https://docs.astral.sh/uv/) first:
+## Documentation
+
+- **[Full README](README_OPCODE.md)** — Detailed usage, configuration, troubleshooting
+- **[Skill File](.opencode/skills/coarse-review/SKILL.md)** — The OpenCode skill implementation
+- **[Parser Script](scripts/parse_paper.py)** — Structure parsing helper
+
+## Supported Formats
+
+- ✅ `.md` / `.markdown` — Best format, full support
+- ✅ `.txt` — Plain text, full support  
+- ✅ `.tex` — LaTeX source, full support
+- ✅ `.docx` — DOCX via python-docx
+- ✅ `.html` / `.epub` — Supported
+- ⚠️ `.pdf` — Convert to text first (see README_OPCODE.md)
+
+## How It Works
+
+The OpenCode skill implements the same review pipeline as the original coarse:
+
+1. **Load & Parse** — Read file, split into sections
+2. **Structure Analysis** — Identify title, abstract, sections, domain
+3. **Parallel Review Agents** — Launch background tasks for:
+   - Overview review (macro issues)
+   - Per-section reviews (detailed comments)
+   - Cross-section consistency check
+4. **Editorial Pass** — Filter duplicates, contradictions, low-quality comments
+5. **Output** — Render structured markdown review
+
+All LLM calls go through your OpenCode subscription. No external API keys.
+
+## Requirements
+
+- [OpenCode](https://opencode.ai/) installed and configured
+- Python 3.10+ (for structure parsing helper)
+- For PDF inputs: `pdftotext` or similar conversion tool
+
+## Install
 
 ```bash
-# macOS / Linux
-curl -LsSf https://astral.sh/uv/install.sh | sh
-
-# Windows
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+./install.sh
 ```
 
-`uvx` runs coarse in a temporary environment with no permanent install. To install permanently:
+This symlinks the skill to `~/.config/opencode/skills/coarse-review`.
+
+## Uninstall
 
 ```bash
-uv tool install coarse-ink    # or: pip install coarse-ink
+rm -rf ~/.config/opencode/skills/coarse-review
 ```
 
-> **Why `coarse-ink` and not `coarse`?** The bare `coarse` name on PyPI is
-> held by an unrelated package, so we ship under `coarse-ink`. The Python
-> import name (`import coarse`) and the `coarse` CLI command are unchanged
-> — installing `coarse-ink` puts both `coarse` and `coarse-ink` on your
-> PATH.
+## Example Output
 
-### Save your API key
+```markdown
+# Peer Review: The Impact of Minimum Wage on Employment: A Meta-Analysis
 
-To avoid passing `--api-key` every time, create a `.env` file in your working directory:
-
-```
-OPENROUTER_API_KEY=sk-or-v1-YOUR_KEY
-```
-
-Or run `coarse setup` to store keys in `~/.coarse/config.toml`.
-
-## Supported formats
-
-PDF, TXT, Markdown, LaTeX, DOCX, HTML, and EPUB. PDFs use Mistral OCR; other formats use
-Docling (if installed) with lightweight fallbacks. Install optional format support:
-
-```bash
-pip install coarse-ink[formats]   # DOCX, HTML, EPUB fallbacks
-pip install coarse-ink[docling]   # Docling for PDF/DOCX/HTML/LaTeX
-```
-
-## How it works
-
-```
-paper.pdf (or .txt, .md, .tex, .docx, .html, .epub)
-  -> Mistral OCR (Docling fallback)      Extract text as markdown
-  -> Vision LLM spot-check               Optional QA (auto-triggers on garbled text)
-  -> Structure analysis                   Parse sections, detect math content, classify domain
-  -> Domain calibration + lit search      Parallel: domain-specific criteria + Perplexity Sonar Pro
-  -> Overview agent                       Single macro-level review pass
-  -> Completeness agent                   Structural-gap pass merged into overview
-  -> Section agents + proof verification  Parallel: 15-25 detailed comments; math sections get adversarial proof check
-  -> Cross-section synthesis              Results vs discussion consistency check
-  -> Editorial filter                     Primary deduplication, contradiction, and quality pass
-  -> Legacy crossref/critique fallback    Only used if the editorial pass fails
-  -> Quote verification                   Fuzzy-match quotes against paper text (stricter for math)
-  -> Synthesis                            Render final paper_review.md
-```
-
-The pipeline extracts text, classifies the paper's domain and structure, then generates
-domain-specific review criteria and searches for related literature (via
-[Perplexity Sonar Pro](https://docs.perplexity.ai/), with arXiv fallback). A single
-overview pass produces macro-level feedback, completeness can add structural gaps, and
-section agents run in parallel with adversarial proof verification for math-heavy sections.
-A conditional cross-section pass checks whether discussion claims are supported by formal
-results, and an editorial pass is the primary deduplication and quality gate. All quotes
-are programmatically verified against the source text, with stricter thresholds for math
-content.
-
-## Model selection
-
-Pass any litellm-compatible model string with `--model`:
-
-```bash
-coarse review paper.pdf --model openai/gpt-4o
-coarse review paper.pdf --model anthropic/claude-sonnet-4-6
-coarse review paper.pdf --model gemini/gemini-3-flash-preview
-```
-
-The default model is `qwen/qwen3.5-plus-02-15` routed via [OpenRouter](https://openrouter.ai).
-Any model supported by [litellm](https://docs.litellm.ai/docs/providers) works.
-With only `OPENROUTER_API_KEY` set, all models (including vision QA) route through OpenRouter automatically.
-
-Use `--cheap` to automatically select the cheapest model for which you have an API key.
-
-## API keys
-
-Only `OPENROUTER_API_KEY` is needed. This covers everything: review agents,
-literature search, and PDF extraction (Mistral OCR is always routed through
-OpenRouter's file-parser plugin, so there's no separate key for it). For
-step-by-step setup instructions, see the [API key guide](https://coarse.vercel.app/setup).
-
-> **Set your OpenRouter per-key spend limit to at least $10** (ideally matching
-> the `max_cost_usd` default of `$10`). If the limit is hit mid-review the run
-> will fail and you'll need to raise the limit and resubmit. Cost estimates
-> shown before each review are approximate (~30% buffer) — they're a guide,
-> not a hard ceiling, so leave yourself headroom.
-
-For direct provider access to chat models (lower latency, separate billing),
-you can set the provider-specific key instead:
-
-| Provider   | Environment variable   |
-|------------|------------------------|
-| OpenRouter | `OPENROUTER_API_KEY`   |
-| OpenAI     | `OPENAI_API_KEY`       |
-| Anthropic  | `ANTHROPIC_API_KEY`    |
-| Google     | `GEMINI_API_KEY`       |
-| Mistral    | `MISTRAL_API_KEY`      |
-| Groq       | `GROQ_API_KEY`         |
-| Together   | `TOGETHER_API_KEY`     |
-| Cohere     | `COHERE_API_KEY`       |
-| Azure      | `AZURE_API_KEY`        |
-
-## Cost
-
-coarse estimates cost before running and asks for confirmation. The estimate includes a
-30% buffer to account for variance.
-
-| Paper length    | Typical cost  |
-|-----------------|---------------|
-| Short (< 20pp)  | $0.25 - $0.50 |
-| Long (30+ pp)   | $0.50 - $1    |
-
-**Actual costs can run materially above the estimate** on complex papers depending on
-model reasoning depth, editorial filtering behavior, and proof-verification chains
-for math-heavy sections. The built-in buffer is conservative, not a ceiling.
-Make sure your OpenRouter per-key spend limit has headroom above the estimate.
-
-The default spending cap is **$10 per review** (`max_cost_usd` in config). Use `--yes` to skip the
-confirmation prompt. Use `--no-qa` to skip the post-extraction quality check (vision LLM).
-Scanned PDFs are supported via Docling's built-in OCR (`pip install coarse-ink[docling]`).
-
-You can also load API keys from any `.env` file with `--env-file path/to/.env`.
-
-## Output format
-
-The review is written as a structured markdown file:
-
-```
-# Paper Title
-
-**Date**: MM/DD/YYYY
-**Domain**: social_sciences/economics
-**Taxonomy**: academic/research_paper
-**Filter**: Active comments
+**Date**: 05/13/2026
+**Reviewer**: AI Peer Review (coarse-opencode)
+**Format**: markdown
 
 ---
 
 ## Overall Feedback
 
-4-6 macro issues with titles and body paragraphs.
+### Issue 1: Identification strategy relies on untestable exclusion restriction
+The paper assumes that the exclusion restriction holds for all instruments, but...
+
+### Issue 2: Results overstate causal claims
+The observational design limits causal interpretation, yet the Discussion...
 
 ---
 
-## Detailed Comments (N)
+## Detailed Comments (24)
 
-20+ numbered comments, each with a verbatim quote from the paper and
-actionable feedback.
+### Comment 1
+**Quote**: "We find a small but statistically significant negative effect on employment (-0.08, 95% CI: -0.12 to -0.04)"
+**Feedback**: While the point estimate is precise, the practical significance of a 0.08 standard deviation effect is questionable. The authors should discuss the economic magnitude more explicitly and compare it to meaningful benchmarks (e.g., typical employment elasticities in the literature).
+**Confidence**: medium
+**Type**: clarity
+
+---
+
+## Summary
+
+This paper makes a valuable contribution by synthesizing 45 studies on minimum wage effects. The meta-analytic methods are generally sound, and the heterogeneity analysis is particularly insightful. However, the paper would benefit from more careful causal language, additional robustness checks, and a clearer discussion of economic magnitudes.
+
+**Recommendation**: major revisions
 ```
-
-## Python API
-
-```python
-from coarse import review_paper
-from pathlib import Path
-
-review, markdown, paper_text = review_paper(
-    pdf_path=Path("paper.pdf"),  # accepts any supported format
-    model="openai/gpt-4o",       # optional; uses config default if omitted
-)
-
-print(markdown)                         # full review as markdown string
-print(review.detailed_comments[0].feedback)  # access structured fields
-```
-
-`review_paper` returns a `(Review, str, PaperText)` tuple: the structured `Review` model,
-rendered markdown, and the extracted paper text. The `pdf_path` parameter accepts any
-supported file format (PDF, TXT, MD, TeX, DOCX, HTML, EPUB).
-
-## Configuration
-
-Settings are stored in `~/.coarse/config.toml`:
-
-```toml
-default_model = "qwen/qwen3.5-plus-02-15"
-vision_model = "gemini/gemini-3-flash-preview"
-extraction_qa = true
-max_cost_usd = 10.0
-
-[api_keys]
-openai = "sk-..."
-anthropic = "sk-ant-..."
-```
-
-Run `coarse setup` for an interactive prompt that writes this file.
 
 ## Development
 
+To modify the skill, edit `.opencode/skills/coarse-review/SKILL.md`.
+
+To test changes, run:
 ```bash
-git clone https://github.com/Davidvandijcke/coarse.git
-cd coarse
-uv sync --extra dev
-uv run pytest tests/ -v
+python3 scripts/parse_paper.py tests/sample_paper.md | jq '.sections | length'
 ```
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, project structure, and guidelines.
+This fork welcomes:
+- Better parsing for unusual formats
+- Additional language support
+- Improved prompts
+- Bug fixes
 
-## Version
+Please open an issue or PR.
 
-1.4.1
+## Credits
+
+- Original [coarse](https://github.com/Davidvandijcke/coarse) by David van Dijcke
+- OpenCode adaptation by community contributors
 
 ## License
 
-MIT
+MIT (same as original coarse)
