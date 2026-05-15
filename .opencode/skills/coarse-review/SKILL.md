@@ -5,6 +5,9 @@ description: >
   Supports markdown (.md), text (.txt), LaTeX (.tex), DOCX, HTML, EPUB, and PDF formats.
   For PDF inputs, uses PyMuPDF (free, local extraction — no API needed).
   Use when the user asks to review, critique, referee, or provide feedback on an academic paper.
+  Also use when the user uploads or references a PDF file that the model cannot read directly
+  (e.g., "[PDF] ERROR: Cannot read..." or "I uploaded a PDF"). In those cases, ask the user
+  for the file path and proceed with extraction.
   Do NOT use for code review, blog posts, or non-academic documents.
   Make sure to use this skill whenever the user mentions paper review, manuscript critique,
   academic feedback, preprint evaluation, or referee report — even if they don't explicitly
@@ -35,6 +38,18 @@ LLM reasoning. No API keys needed for text/markdown inputs.
 - **Python 3** (for bundled scripts; any version works)
 - **For PDF inputs**: PyMuPDF is installed automatically when needed (free, local, no API)
 - **For DOCX/HTML/EPUB**: Optional packages (`pip install mammoth markdownify ebooklib`)
+
+## Handling Direct PDF Uploads
+
+If the user uploaded a PDF file directly and the model reports that it cannot read it (e.g., "[PDF] ERROR: Cannot read..."), the skill has been invoked because the description explicitly covers this scenario.
+
+In this case:
+1. Acknowledge the upload failure: "I see you uploaded a PDF, but I can't read it directly through the chat interface."
+2. Ask the user for the file path: "Please provide the full file path (e.g., `/Users/arthur/papers/my_paper.pdf`) so I can extract and review it."
+3. Wait for the user to provide the path
+4. Proceed to Step 1 below with the provided path
+
+**Do not** attempt to read the PDF directly from the upload — the model does not support PDF input. Always use the extraction script.
 
 ## Step 1: Load Paper
 

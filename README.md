@@ -102,6 +102,17 @@ This skill extracts text from PDFs using **PyMuPDF**, a free and open-source Pyt
 - **Local processing** — the PDF is read directly by the Python script
 - **Auto-installation** — if PyMuPDF is not installed, the skill installs it automatically when you first review a PDF
 
+### Uploading PDFs Directly in Chat
+
+If you upload a PDF file directly into the chat (drag-and-drop or file picker), the model may report that it cannot read the file. **This is expected** — most coding agents cannot process raw PDFs directly.
+
+When this happens, the skill will detect the upload failure and ask you for the file path. Simply provide the full path (e.g., `/Users/arthur/papers/my_paper.pdf`) and the skill will extract and review it normally.
+
+**Recommended:** Instead of uploading, just type the command with the file path:
+```bash
+/coarse-review ~/Documents/papers/my_paper.pdf
+```
+
 ### Alternative: Convert PDFs to Markdown Online
 
 If you prefer not to install anything extra, you can convert your PDF to a markdown file first using a free web tool, then run the review on the markdown file.
