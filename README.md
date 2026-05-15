@@ -20,12 +20,12 @@ Don't want to deal with terminal commands? Just copy and paste one of these prom
 
 **For Claude Code users:**
 ```
-Please install the coarse-review skill for me. Clone https://github.com/opencode-ai/coarse-opencode and run the install script so I can use /coarse-review from anywhere.
+Please install the coarse-review skill for me. Clone https://github.com/arthur-albuquerque/coarse-skills and run the install script so I can use /coarse-review from anywhere.
 ```
 
 **For OpenCode users:**
 ```
-Please install the coarse-review skill for me. Clone https://github.com/opencode-ai/coarse-opencode and run the install script so I can use /coarse-review from anywhere.
+Please install the coarse-review skill for me. Clone https://github.com/arthur-albuquerque/coarse-skills and run the install script so I can use /coarse-review from anywhere.
 ```
 
 Your agent will handle the entire setup. Once it's done, skip to Step 2 below.
@@ -41,8 +41,8 @@ Click the green "Code" button at the top of this page and select "Download ZIP".
 Or, if you're comfortable with the terminal:
 
 ```bash
-git clone https://github.com/opencode-ai/coarse-opencode.git
-cd coarse-opencode
+git clone https://github.com/arthur-albuquerque/coarse-skills.git
+cd coarse-skills
 ```
 
 **Step 2: Run the installer**
@@ -182,7 +182,7 @@ Output:
 ## Project Structure
 
 ```
-coarse-opencode/
+coarse-skills/
 ├── .claude/
 │   └── skills/
 │       └── coarse-review/
