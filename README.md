@@ -16,14 +16,8 @@ This is a lightweight fork of [coarse](https://github.com/Davidvandijcke/coarse)
 
 ### Easiest Way: Let Your Agent Install It (Recommended)
 
-Don't want to deal with terminal commands? Just copy and paste one of these prompts into your agent. It will download and install the skill for you.
+Don't want to deal with terminal commands? Just copy and paste this prompt into your agent. It will download and install the skill for you.
 
-**For Claude Code users:**
-```
-Please install the coarse-review skill for me. Download the install script from https://raw.githubusercontent.com/arthur-albuquerque/coarse-skills/dev/install.sh and run it so I can use /coarse-review from anywhere.
-```
-
-**For OpenCode users:**
 ```
 Please install the coarse-review skill for me. Download the install script from https://raw.githubusercontent.com/arthur-albuquerque/coarse-skills/dev/install.sh and run it so I can use /coarse-review from anywhere.
 ```
