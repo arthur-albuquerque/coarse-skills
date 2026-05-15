@@ -1,145 +1,151 @@
-# coarse-opencode
+# coarse-review
 
-**OpenCode-native academic paper reviewer** — a fork of [coarse](https://github.com/Davidvandijcke/coarse) that uses your OpenCode subscription instead of OpenRouter API keys.
+> **Zero API keys. Zero setup. Just your coding agent subscription.**
+>
+> Review academic papers using the Claude Code or OpenCode subscription you already have. No OpenRouter. No Anthropic API. No Perplexity. No Python package to install.
+
+A skill for Claude Code and OpenCode that produces rigorous academic peer reviews. Feed it a paper, get a structured markdown review back.
+
+## What Is This?
+
+This is a lightweight fork of [coarse](https://github.com/Davidvandijcke/coarse), a web-based academic paper review tool by David van Dijcke. The original tool requires OpenRouter API keys, a Python package install (`pip install coarse`), and a web backend (Supabase, Modal workers, subscription management).
+
+**This fork reimplements the same peer review logic as a native skill** for Claude Code and OpenCode, leveraging your existing agent subscription instead of external APIs. It replaces the original's 11,000-line Python package and web infrastructure with ~600 lines of bundled scripts plus native agent parallelization.
 
 ## Quick Start
 
+### Option 1: Run from this repo (no install)
+
 ```bash
-# 1. Clone this fork
-git clone https://github.com/YOUR_USERNAME/coarse-opencode.git
+# Clone or navigate to this repo
 cd coarse-opencode
 
-# 2. Install the skill
-./install.sh
-
-# 3. Use it in OpenCode
-/coarse-review path/to/paper.md
+# The skill is auto-discovered when you're in the repo
+/coarse-review ~/papers/diffusion_models.md
 ```
 
-## What Changed
+### Option 2: Install globally
 
-| Feature | Original coarse | This fork |
-|---------|----------------|-----------|
-| LLM backend | OpenRouter API (paid per review) | Your OpenCode subscription |
-| Text extraction | Mistral OCR via OpenRouter | Native file reading (no API) |
-| Required keys | `OPENROUTER_API_KEY` | None for text inputs |
-| PDF support | Yes (with OCR) | Convert to text first |
-| Parallel agents | Python ThreadPool | OpenCode native `task()` |
-| Cost per review | ~$0.25–$2.00 | OpenCode quota only |
-| Setup time | 5-10 min (API keys, config) | 1 min (just install skill) |
+```bash
+./install.sh
+```
 
-## Documentation
+This symlinks the skill into:
+- `~/.claude/skills/coarse-review` (Claude Code)
+- `~/.config/opencode/skills/coarse-review` (OpenCode)
 
-- **[Full README](README_OPCODE.md)** — Detailed usage, configuration, troubleshooting
-- **[Skill File](.opencode/skills/coarse-review/SKILL.md)** — The OpenCode skill implementation
-- **[Parser Script](scripts/parse_paper.py)** — Structure parsing helper
+Then use it from anywhere:
+```bash
+/coarse-review ~/papers/diffusion_models.md
+```
 
-## Supported Formats
+## What You Need
 
-- ✅ `.md` / `.markdown` — Best format, full support
-- ✅ `.txt` — Plain text, full support  
-- ✅ `.tex` — LaTeX source, full support
-- ✅ `.docx` — DOCX via python-docx
-- ✅ `.html` / `.epub` — Supported
-- ⚠️ `.pdf` — Convert to text first (see README_OPCODE.md)
+| | Claude Code | OpenCode |
+|---|---|---|
+| **Subscription** | Claude Code | OpenCode |
+| **Paper formats** | `.md` `.txt` `.tex` `.docx` `.html` `.epub` | same |
+| **PDFs?** | Convert to text first (`pdftotext`, `pdfplumber`) | same |
+| **API keys** | None | None |
+| **Python** | 3.x (for bundled scripts) | 3.x (for bundled scripts) |
 
 ## How It Works
 
-The OpenCode skill implements the same review pipeline as the original coarse:
+The skill bundles three Python scripts that handle deterministic work, leaving the LLM reasoning to your agent subscription:
 
-1. **Load & Parse** — Read file, split into sections
-2. **Structure Analysis** — Identify title, abstract, sections, domain
-3. **Parallel Review Agents** — Launch background tasks for:
-   - Overview review (macro issues)
-   - Per-section reviews (detailed comments)
-   - Cross-section consistency check
-4. **Editorial Pass** — Filter duplicates, contradictions, low-quality comments
-5. **Output** — Render structured markdown review
+1. **Parse** (`scripts/parse_paper.py`) — Split paper into sections, extract claims/definitions, detect math content, classify document form
+2. **Verify** (`scripts/verify_quotes.py`) — Confirm every comment quote is an actual substring of the paper (catches hallucinations)
+3. **Extract** (`scripts/extract_text.py`) — Convert `.docx`, `.html`, `.epub`, `.tex` to markdown
 
-All LLM calls go through your OpenCode subscription. No external API keys.
+Then the skill spawns parallel review agents:
+4. **Overview** — High-level macro issues (conceptual gaps, methodological concerns)
+5. **Per-section** — Detailed comments per major section (3-8 comments each)
+6. **Cross-section** — Consistency check between Results and Discussion
+7. **Editorial** — Filter duplicates, rank by severity
+8. **Output** — Structured markdown review (`paper_review.md`)
 
-## Requirements
+## Example
 
-- [OpenCode](https://opencode.ai/) installed and configured
-- Python 3.10+ (for structure parsing helper)
-- For PDF inputs: `pdftotext` or similar conversion tool
+```bash
+/coarse-review ~/papers/diffusion_models.md
+# → writes paper_review.md in current directory
+```
+
+Output:
+- **Overall Feedback**: 4-6 high-level issues
+- **Detailed Comments**: 15-30 specific, quoted comments with confidence levels
+- **Quote Verification**: Exact matches, fuzzy-corrected quotes, dropped hallucinations
+- **Recommendation**: accept / minor revisions / major revisions / reject
+
+## Project Structure
+
+```
+coarse-opencode/
+├── .claude/
+│   └── skills/
+│       └── coarse-review/
+│           ├── SKILL.md              # Claude skill instructions
+│           └── scripts/
+│               ├── parse_paper.py    # Structure parsing
+│               ├── verify_quotes.py  # Quote verification
+│               └── extract_text.py   # Format conversion
+├── .opencode/
+│   └── skills/
+│       └── coarse-review/            # Same structure for OpenCode
+├── install.sh                        # Global installer
+├── LICENSE
+└── README.md
+```
 
 ## Install
+
+### Both platforms at once
 
 ```bash
 ./install.sh
 ```
 
-This symlinks the skill to `~/.config/opencode/skills/coarse-review`.
+### Claude Code only
+
+```bash
+ln -s "$(pwd)/.claude/skills/coarse-review" ~/.claude/skills/coarse-review
+# or
+cp -r .claude/skills/coarse-review ~/.claude/skills/
+```
+
+### OpenCode only
+
+```bash
+ln -s "$(pwd)/.opencode/skills/coarse-review" ~/.config/opencode/skills/coarse-review
+# or
+./install.sh
+```
 
 ## Uninstall
 
 ```bash
+rm -rf ~/.claude/skills/coarse-review
 rm -rf ~/.config/opencode/skills/coarse-review
 ```
 
-## Example Output
+## Comparison: This Fork vs. Original coarse
 
-```markdown
-# Peer Review: The Impact of Minimum Wage on Employment: A Meta-Analysis
+This fork strips away the original's web backend, worker queues, and API infrastructure, replacing them with native agent parallelization. Here's the difference:
 
-**Date**: 05/13/2026
-**Reviewer**: AI Peer Review (coarse-opencode)
-**Format**: markdown
+| | Original coarse | This skill |
+|---|---|---|
+| **LLM backend** | OpenRouter API (~$0.25-2.00/review) | Your existing agent subscription |
+| **Required keys** | `OPENROUTER_API_KEY` | None |
+| **Setup** | 5-10 min | 1 min (OpenCode) / 0 min (Claude Code) |
+| **Python package** | 11,000 lines | 3 scripts, ~600 lines |
+| **Quote verification** | Yes (Python) | Yes (bundled script) |
+| **Parallelism** | Python ThreadPool | Native agent fan-out |
 
----
-
-## Overall Feedback
-
-### Issue 1: Identification strategy relies on untestable exclusion restriction
-The paper assumes that the exclusion restriction holds for all instruments, but...
-
-### Issue 2: Results overstate causal claims
-The observational design limits causal interpretation, yet the Discussion...
-
----
-
-## Detailed Comments (24)
-
-### Comment 1
-**Quote**: "We find a small but statistically significant negative effect on employment (-0.08, 95% CI: -0.12 to -0.04)"
-**Feedback**: While the point estimate is precise, the practical significance of a 0.08 standard deviation effect is questionable. The authors should discuss the economic magnitude more explicitly and compare it to meaningful benchmarks (e.g., typical employment elasticities in the literature).
-**Confidence**: medium
-**Type**: clarity
-
----
-
-## Summary
-
-This paper makes a valuable contribution by synthesizing 45 studies on minimum wage effects. The meta-analytic methods are generally sound, and the heterogeneity analysis is particularly insightful. However, the paper would benefit from more careful causal language, additional robustness checks, and a clearer discussion of economic magnitudes.
-
-**Recommendation**: major revisions
-```
-
-## Development
-
-To modify the skill, edit `.opencode/skills/coarse-review/SKILL.md`.
-
-To test changes, run:
-```bash
-python3 scripts/parse_paper.py tests/sample_paper.md | jq '.sections | length'
-```
-
-## Contributing
-
-This fork welcomes:
-- Better parsing for unusual formats
-- Additional language support
-- Improved prompts
-- Bug fixes
-
-Please open an issue or PR.
+The original `coarse` runs reviews through a web backend with Python ThreadPool workers and OpenRouter API calls. This fork runs reviews through your agent's native parallel subagents, and the bundled scripts handle all deterministic work (parsing, verification, extraction) without any API calls.
 
 ## Credits
 
-- Original [coarse](https://github.com/Davidvandijcke/coarse) by David van Dijcke
-- OpenCode adaptation by community contributors
+- **Original tool**: [coarse](https://github.com/Davidvandijcke/coarse) by David van Dijcke — the web-based review system this fork reimplements
+- **This fork**: Native skill adaptations for Claude Code and OpenCode by the OpenCode community
 
-## License
-
-MIT (same as original coarse)
+MIT License (same as original)
