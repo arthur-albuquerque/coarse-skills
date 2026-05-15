@@ -210,17 +210,13 @@ coarse-skills/
 ### Claude Code only
 
 ```bash
-ln -s "$(pwd)/.claude/skills/coarse-review" ~/.claude/skills/coarse-review
-# or
 cp -r .claude/skills/coarse-review ~/.claude/skills/
 ```
 
 ### OpenCode only
 
 ```bash
-ln -s "$(pwd)/.opencode/skills/coarse-review" ~/.config/opencode/skills/coarse-review
-# or
-./install.sh
+cp -r .opencode/skills/coarse-review ~/.config/opencode/skills/
 ```
 
 ## Uninstall

@@ -19,25 +19,15 @@ if [ -e "$CLAUDE_SKILL_TARGET" ]; then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         rm -rf "$CLAUDE_SKILL_TARGET"
-        if command -v ln &> /dev/null && [ ! "${FORCE_COPY:-}" = "true" ]; then
-            ln -s "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
-            echo "✓ Claude Code skill installed (symlink)"
-        else
-            cp -r "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
-            echo "✓ Claude Code skill installed (copy)"
-        fi
+        cp -r "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
+        echo "✓ Claude Code skill installed"
     else
         echo "  Skipped Claude Code installation"
     fi
 else
     mkdir -p "${HOME}/.claude/skills"
-    if command -v ln &> /dev/null && [ ! "${FORCE_COPY:-}" = "true" ]; then
-        ln -s "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
-        echo "✓ Claude Code skill installed (symlink)"
-    else
-        cp -r "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
-        echo "✓ Claude Code skill installed (copy)"
-    fi
+    cp -r "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
+    echo "✓ Claude Code skill installed"
 fi
 
 echo ""
@@ -51,25 +41,15 @@ if [ -e "$OPENCODE_SKILL_TARGET" ]; then
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
         rm -rf "$OPENCODE_SKILL_TARGET"
-        if command -v ln &> /dev/null && [ ! "${FORCE_COPY:-}" = "true" ]; then
-            ln -s "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
-            echo "✓ OpenCode skill installed (symlink)"
-        else
-            cp -r "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
-            echo "✓ OpenCode skill installed (copy)"
-        fi
+        cp -r "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
+        echo "✓ OpenCode skill installed"
     else
         echo "  Skipped OpenCode installation"
     fi
 else
     mkdir -p "${HOME}/.config/opencode/skills"
-    if command -v ln &> /dev/null && [ ! "${FORCE_COPY:-}" = "true" ]; then
-        ln -s "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
-        echo "✓ OpenCode skill installed (symlink)"
-    else
-        cp -r "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
-        echo "✓ OpenCode skill installed (copy)"
-    fi
+    cp -r "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
+    echo "✓ OpenCode skill installed"
 fi
 
 echo ""
