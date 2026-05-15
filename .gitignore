@@ -1,30 +1,5 @@
-__pycache__/
-*.pyc
-.venv/
-dist/
-*.egg-info/
 .DS_Store
-.env
-.coarse/
-
-# Ignore everything inside .claude/ except the shared slash commands,
-# agent definitions, hook scripts, and project-level settings, which are
-# team-wide workflow tooling. Keep .claude/settings.local.json ignored.
-.claude/*
-!.claude/commands
-!.claude/agents
-!.claude/hooks
-!.claude/settings.json
-CLAUDE.md
+*.pyc
+__pycache__/
 *.pdf
-!data/**/*.pdf
 paper_review.md
-paper_quality_*.md
-r3d_review_*.md
-quality_gap_analysis.md
-*.pem
-*.key
-
-# Build caches
-*.tsbuildinfo
-*.extraction_cache.json

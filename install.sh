@@ -2,49 +2,86 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SKILL_SOURCE="$SCRIPT_DIR/.opencode/skills/coarse-review"
-SKILL_TARGET="${HOME}/.config/opencode/skills/coarse-review"
 
-echo "=== coarse-opencode Skill Installer ==="
+echo "=== coarse-review Skill Installer ==="
+echo ""
+echo "This will install the coarse-review skill for:"
+echo "  1. Claude Code  (~/.claude/skills/)"
+echo "  2. OpenCode     (~/.config/opencode/skills/)"
 echo ""
 
-if [ ! -d "${HOME}/.config/opencode/skills" ]; then
-    echo "Creating OpenCode skills directory..."
-    mkdir -p "${HOME}/.config/opencode/skills"
-fi
+CLAUDE_SKILL_SOURCE="$SCRIPT_DIR/.claude/skills/coarse-review"
+CLAUDE_SKILL_TARGET="${HOME}/.claude/skills/coarse-review"
 
-if [ -e "$SKILL_TARGET" ]; then
-    echo "Skill already exists at: $SKILL_TARGET"
-    read -p "Replace existing skill? (y/N): " -n 1 -r
+if [ -e "$CLAUDE_SKILL_TARGET" ]; then
+    echo "Claude Code skill already exists at: $CLAUDE_SKILL_TARGET"
+    read -p "Replace existing Claude Code skill? (y/N): " -n 1 -r
     echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "Installation cancelled."
-        exit 0
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        rm -rf "$CLAUDE_SKILL_TARGET"
+        if command -v ln &> /dev/null && [ ! "${FORCE_COPY:-}" = "true" ]; then
+            ln -s "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
+            echo "✓ Claude Code skill installed (symlink)"
+        else
+            cp -r "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
+            echo "✓ Claude Code skill installed (copy)"
+        fi
+    else
+        echo "  Skipped Claude Code installation"
     fi
-    rm -rf "$SKILL_TARGET"
-fi
-
-echo "Installing skill from: $SKILL_SOURCE"
-echo "Installing to: $SKILL_TARGET"
-
-if command -v ln &> /dev/null && [ ! "${FORCE_COPY:-}" = "true" ]; then
-    ln -s "$SKILL_SOURCE" "$SKILL_TARGET"
-    echo "Installed as symlink (changes to skill are reflected immediately)"
 else
-    cp -r "$SKILL_SOURCE" "$SKILL_TARGET"
-    echo "Installed as copy (stable, requires re-install for updates)"
+    mkdir -p "${HOME}/.claude/skills"
+    if command -v ln &> /dev/null && [ ! "${FORCE_COPY:-}" = "true" ]; then
+        ln -s "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
+        echo "✓ Claude Code skill installed (symlink)"
+    else
+        cp -r "$CLAUDE_SKILL_SOURCE" "$CLAUDE_SKILL_TARGET"
+        echo "✓ Claude Code skill installed (copy)"
+    fi
 fi
 
 echo ""
-echo "✓ Skill installed successfully!"
+
+OPENCODE_SKILL_SOURCE="$SCRIPT_DIR/.opencode/skills/coarse-review"
+OPENCODE_SKILL_TARGET="${HOME}/.config/opencode/skills/coarse-review"
+
+if [ -e "$OPENCODE_SKILL_TARGET" ]; then
+    echo "OpenCode skill already exists at: $OPENCODE_SKILL_TARGET"
+    read -p "Replace existing OpenCode skill? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        rm -rf "$OPENCODE_SKILL_TARGET"
+        if command -v ln &> /dev/null && [ ! "${FORCE_COPY:-}" = "true" ]; then
+            ln -s "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
+            echo "✓ OpenCode skill installed (symlink)"
+        else
+            cp -r "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
+            echo "✓ OpenCode skill installed (copy)"
+        fi
+    else
+        echo "  Skipped OpenCode installation"
+    fi
+else
+    mkdir -p "${HOME}/.config/opencode/skills"
+    if command -v ln &> /dev/null && [ ! "${FORCE_COPY:-}" = "true" ]; then
+        ln -s "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
+        echo "✓ OpenCode skill installed (symlink)"
+    else
+        cp -r "$OPENCODE_SKILL_SOURCE" "$OPENCODE_SKILL_TARGET"
+        echo "✓ OpenCode skill installed (copy)"
+    fi
+fi
+
+echo ""
+echo "=== Installation Complete ==="
 echo ""
 echo "Usage:"
-echo "  /coarse-review path/to/paper.md"
+echo "  Claude Code:  /coarse-review path/to/paper.md"
+echo "  OpenCode:     /coarse-review path/to/paper.md"
 echo ""
 echo "For PDF inputs, convert first:"
 echo "  pdftotext paper.pdf paper.txt"
-echo "  # or"
-echo "  python3 scripts/parse_paper.py paper.docx > paper_structure.json"
 echo ""
 echo "To uninstall:"
-echo "  rm -rf $SKILL_TARGET"
+echo "  rm -rf ~/.claude/skills/coarse-review"
+echo "  rm -rf ~/.config/opencode/skills/coarse-review"
