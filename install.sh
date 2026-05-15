@@ -1,16 +1,33 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_URL="https://github.com/arthur-albuquerque/coarse-skills.git"
+TMP_DIR=""
+
+cleanup() {
+    if [ -n "${TMP_DIR}" ] && [ -d "${TMP_DIR}" ]; then
+        rm -rf "${TMP_DIR}"
+    fi
+}
+trap cleanup EXIT
+
+if ! command -v git &> /dev/null; then
+    echo "Error: git is required but not installed." >&2
+    echo "Please install git and try again." >&2
+    exit 1
+fi
 
 echo "=== coarse-review Skill Installer ==="
 echo ""
-echo "This will install the coarse-review skill for:"
-echo "  1. Claude Code  (~/.claude/skills/)"
-echo "  2. OpenCode     (~/.config/opencode/skills/)"
+echo "Cloning repository to a temporary folder..."
+
+TMP_DIR="$(mktemp -d)"
+git clone --depth 1 "$REPO_URL" "$TMP_DIR" &> /dev/null
+
+echo "Installing skills..."
 echo ""
 
-CLAUDE_SKILL_SOURCE="$SCRIPT_DIR/.claude/skills/coarse-review"
+CLAUDE_SKILL_SOURCE="$TMP_DIR/.claude/skills/coarse-review"
 CLAUDE_SKILL_TARGET="${HOME}/.claude/skills/coarse-review"
 
 if [ -e "$CLAUDE_SKILL_TARGET" ]; then
@@ -32,7 +49,7 @@ fi
 
 echo ""
 
-OPENCODE_SKILL_SOURCE="$SCRIPT_DIR/.opencode/skills/coarse-review"
+OPENCODE_SKILL_SOURCE="$TMP_DIR/.opencode/skills/coarse-review"
 OPENCODE_SKILL_TARGET="${HOME}/.config/opencode/skills/coarse-review"
 
 if [ -e "$OPENCODE_SKILL_TARGET" ]; then

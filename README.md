@@ -20,40 +20,15 @@ Don't want to deal with terminal commands? Just copy and paste one of these prom
 
 **For Claude Code users:**
 ```
-Please install the coarse-review skill for me. Clone https://github.com/arthur-albuquerque/coarse-skills and run the install script so I can use /coarse-review from anywhere.
+Please install the coarse-review skill for me. Download the install script from https://raw.githubusercontent.com/arthur-albuquerque/coarse-skills/dev/install.sh and run it so I can use /coarse-review from anywhere.
 ```
 
 **For OpenCode users:**
 ```
-Please install the coarse-review skill for me. Clone https://github.com/arthur-albuquerque/coarse-skills and run the install script so I can use /coarse-review from anywhere.
+Please install the coarse-review skill for me. Download the install script from https://raw.githubusercontent.com/arthur-albuquerque/coarse-skills/dev/install.sh and run it so I can use /coarse-review from anywhere.
 ```
 
 Your agent will handle the entire setup. Once it's done, skip to Step 2 below.
-
----
-
-### Manual Install (If You Prefer to Do It Yourself)
-
-**Step 1: Download this repository**
-
-Click the green "Code" button at the top of this page and select "Download ZIP". Unzip the file on your computer.
-
-Or, if you're comfortable with the terminal:
-
-```bash
-git clone https://github.com/arthur-albuquerque/coarse-skills.git
-cd coarse-skills
-```
-
-**Step 2: Run the installer**
-
-Open your terminal, navigate to the folder you just downloaded, and run:
-
-```bash
-./install.sh
-```
-
-That's it. The installer sets everything up automatically for both Claude Code and OpenCode.
 
 ---
 
@@ -61,7 +36,7 @@ That's it. The installer sets everything up automatically for both Claude Code a
 
 ### 1. Install the skill (one time only)
 
-Use the "Easiest Way" above, or run `./install.sh` after downloading this repository.
+Use the "Easiest Way" above.
 
 ### 2. Go to your paper's folder
 
@@ -197,26 +172,6 @@ coarse-skills/
 ├── install.sh                        # Global installer
 ├── LICENSE
 └── README.md
-```
-
-## Install
-
-### Both platforms at once
-
-```bash
-./install.sh
-```
-
-### Claude Code only
-
-```bash
-cp -r .claude/skills/coarse-review ~/.claude/skills/
-```
-
-### OpenCode only
-
-```bash
-cp -r .opencode/skills/coarse-review ~/.config/opencode/skills/
 ```
 
 ## Uninstall
