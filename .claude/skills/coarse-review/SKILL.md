@@ -2,8 +2,8 @@
 name: coarse-review
 description: >
   Produce a rigorous academic peer review of a research paper, manuscript, or preprint.
-  Supports markdown (.md), text (.txt), LaTeX (.tex), DOCX, HTML, and EPUB formats.
-  For PDF inputs, extract text first using pdftotext or pdfplumber.
+  Supports markdown (.md), text (.txt), LaTeX (.tex), DOCX, HTML, EPUB, and PDF formats.
+  For PDF inputs, uses PyMuPDF (free, local extraction — no API needed).
   Use when the user asks to review, critique, referee, or provide feedback on an academic paper.
   Do NOT use for code review, blog posts, or non-academic documents.
   Make sure to use this skill whenever the user mentions paper review, manuscript critique,
@@ -33,7 +33,7 @@ LLM reasoning. No API keys needed for text/markdown inputs.
 ## Prerequisites
 
 - **Python 3** (for bundled scripts; any version works)
-- **For PDF inputs**: Extract text first using `pdftotext` or `python -m pdfplumber`
+- **For PDF inputs**: PyMuPDF is installed automatically when needed (free, local, no API)
 - **For DOCX/HTML/EPUB**: Optional packages (`pip install mammoth markdownify ebooklib`)
 
 ## Step 1: Load Paper
@@ -46,15 +46,7 @@ ls -lh "<paper_path>"
 
 If the file does not exist, ask for the correct path.
 
-If the file is a PDF (`.pdf` extension), stop and tell the user:
-> PDF inputs require text extraction first. Options:
-> 1. `pdftotext input.pdf output.txt` (poppler-utils)
-> 2. `python -m pdfplumber input.pdf > output.txt`
-> 3. If you have a pre-extracted markdown file, pass that instead
->
-> Which would you like to do?
-
-For non-PDF files (.docx, .html, .epub), use the bundled extractor:
+For any file (.pdf, .docx, .html, .epub), use the bundled extractor:
 
 ```bash
 python3 <skill_dir>/scripts/extract_text.py "<input_path>" "<output.md>"
@@ -402,8 +394,7 @@ Example:
 
 - **No API keys needed**: All LLM calls go through your agent subscription
 - **Quote verification**: The bundled `verify_quotes.py` catches hallucinated quotes by checking they are actual substrings of the paper text
-- **For text/markdown inputs**: Zero external API calls
-- **For PDF inputs**: Convert to text first. The skill will not process raw PDFs
+- **For text/markdown/PDF inputs**: Zero external API calls. PDF extraction uses free PyMuPDF locally.
 - **Parallel execution**: Section reviews run in parallel via background agents
 - **Cost**: Uses your agent subscription quota only. No per-paper charges
 - **Reproducibility**: Results may vary between runs. Save the review output alongside the paper
@@ -413,4 +404,3 @@ Example:
 - **"No sections found"**: The parser may fail on unusual formatting. Check that the paper has clear headings. If the parser fails, manually identify sections by reading the file.
 - **"All comments dropped"**: The editorial filter may be too aggressive. Re-run with instructions to be less strict, or skip it and use raw collected comments.
 - **"File too large"**: If the paper exceeds ~50 pages or 100KB, individual agents may time out. Split the paper into logical chunks or skip non-critical sections.
-- **PDF conversion**: Use `pdftotext input.pdf output.txt` (poppler-utils) or `python -m pdfplumber input.pdf > output.txt`

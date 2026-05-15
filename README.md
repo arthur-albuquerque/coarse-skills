@@ -14,40 +14,142 @@ This is a lightweight fork of [coarse](https://github.com/Davidvandijcke/coarse)
 
 ## Quick Start
 
-### Option 1: Run from this repo (no install)
+### Easiest Way: Let Your Agent Install It (Recommended)
 
-```bash
-# Clone or navigate to this repo
-cd coarse-opencode
+Don't want to deal with terminal commands? Just copy and paste one of these prompts into your agent. It will download and install the skill for you.
 
-# The skill is auto-discovered when you're in the repo
-/coarse-review ~/papers/diffusion_models.md
+**For Claude Code users:**
+```
+Please install the coarse-review skill for me. Clone https://github.com/opencode-ai/coarse-opencode and run the install script so I can use /coarse-review from anywhere.
 ```
 
-### Option 2: Install globally
+**For OpenCode users:**
+```
+Please install the coarse-review skill for me. Clone https://github.com/opencode-ai/coarse-opencode and run the install script so I can use /coarse-review from anywhere.
+```
+
+Your agent will handle the entire setup. Once it's done, skip to Step 2 below.
+
+---
+
+### Manual Install (If You Prefer to Do It Yourself)
+
+**Step 1: Download this repository**
+
+Click the green "Code" button at the top of this page and select "Download ZIP". Unzip the file on your computer.
+
+Or, if you're comfortable with the terminal:
+
+```bash
+git clone https://github.com/opencode-ai/coarse-opencode.git
+cd coarse-opencode
+```
+
+**Step 2: Run the installer**
+
+Open your terminal, navigate to the folder you just downloaded, and run:
 
 ```bash
 ./install.sh
 ```
 
-This symlinks the skill into:
-- `~/.claude/skills/coarse-review` (Claude Code)
-- `~/.config/opencode/skills/coarse-review` (OpenCode)
+That's it. The installer sets everything up automatically for both Claude Code and OpenCode.
 
-Then use it from anywhere:
+---
+
+## Step-by-Step: Your First Review
+
+### 1. Install the skill (one time only)
+
+Use the "Easiest Way" above, or run `./install.sh` after downloading this repository.
+
+### 2. Go to your paper's folder
+
+Open your terminal and navigate to wherever your paper file is saved. For example:
+
 ```bash
-/coarse-review ~/papers/diffusion_models.md
+cd ~/Documents/papers
 ```
+
+Or if it's in your Downloads folder:
+
+```bash
+cd ~/Downloads
+```
+
+### 3. Start your coding agent
+
+Make sure you start the agent from inside the folder that contains your paper. The review will be saved in this same folder.
+
+**For Claude Code:**
+```bash
+claude
+```
+
+**For OpenCode:**
+```bash
+opencode
+```
+
+### 4. Run the review
+
+Once you see the agent's prompt, type:
+
+```bash
+/coarse-review ./my_paper.md
+```
+
+Replace `my_paper.md` with your actual filename. For example:
+- `./manuscript.tex`
+- `./draft.docx`
+- `./paper.txt`
+- `./paper.pdf` (PDFs work automatically — see below)
+
+You can also use the full file path if you prefer:
+
+```bash
+/coarse-review ~/Documents/papers/my_paper.md
+```
+
+**What happens next:** The skill takes 2-5 minutes to review your paper. When it's done, you'll find a new file called `paper_review.md` in your current folder with the full review.
 
 ## What You Need
 
 | | Claude Code | OpenCode |
 |---|---|---|
 | **Subscription** | Claude Code | OpenCode |
-| **Paper formats** | `.md` `.txt` `.tex` `.docx` `.html` `.epub` | same |
-| **PDFs?** | Convert to text first (`pdftotext`, `pdfplumber`) | same |
+| **Paper formats** | `.md` `.txt` `.tex` `.docx` `.html` `.epub` `.pdf` | same |
+| **PDF extraction** | Automatic via PyMuPDF (free, local, no API) | same |
 | **API keys** | None | None |
 | **Python** | 3.x (for bundled scripts) | 3.x (for bundled scripts) |
+
+## About PDF Support
+
+This skill extracts text from PDFs using **PyMuPDF**, a free and open-source Python library. The extraction happens entirely on your computer:
+
+- **No API calls** — your PDF never leaves your machine
+- **No cloud OCR service** — no Google Vision, no AWS Textract, no OpenAI
+- **No paid service** — PyMuPDF is free and open-source
+- **Local processing** — the PDF is read directly by the Python script
+- **Auto-installation** — if PyMuPDF is not installed, the skill installs it automatically when you first review a PDF
+
+### Alternative: Convert PDFs to Markdown Online
+
+If you prefer not to install anything extra, you can convert your PDF to a markdown file first using a free web tool, then run the review on the markdown file.
+
+**Using datalab.to (free, no signup required):**
+
+1. Go to https://www.datalab.to/playground/documents/new
+2. Click **"Choose File"** and upload your PDF
+3. Wait a few seconds for the conversion
+4. Click **"Download"** to save the `.md` file
+5. Move the downloaded `.md` file to the same folder as your paper
+6. Run the skill on the markdown file:
+   ```bash
+   /coarse-review ./your_paper.md
+   ```
+
+This approach often produces cleaner markdown (better headings, tables, and math formatting) than automated text extraction, which can improve the quality of the review.
 
 ## How It Works
 
@@ -55,7 +157,7 @@ The skill bundles three Python scripts that handle deterministic work, leaving t
 
 1. **Parse** (`scripts/parse_paper.py`) — Split paper into sections, extract claims/definitions, detect math content, classify document form
 2. **Verify** (`scripts/verify_quotes.py`) — Confirm every comment quote is an actual substring of the paper (catches hallucinations)
-3. **Extract** (`scripts/extract_text.py`) — Convert `.docx`, `.html`, `.epub`, `.tex` to markdown
+3. **Extract** (`scripts/extract_text.py`) — Convert `.pdf`, `.docx`, `.html`, `.epub`, `.tex` to markdown. PDF extraction uses PyMuPDF locally — no external API, no OCR service, no cloud upload.
 
 Then the skill spawns parallel review agents:
 4. **Overview** — High-level macro issues (conceptual gaps, methodological concerns)

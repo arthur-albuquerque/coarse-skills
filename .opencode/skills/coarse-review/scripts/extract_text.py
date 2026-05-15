@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Extract text from various document formats to markdown.
 
-Supports: .md, .txt, .tex, .html, .htm, .docx, .epub
-Pure Python — uses only stdlib + optional packages (markdownify, mammoth, ebooklib).
-For PDFs, delegates to pdftotext or python -m pdfplumber.
+Supports: .md, .txt, .tex, .html, .htm, .docx, .epub, .pdf
+Pure Python — uses only stdlib + optional packages (markdownify, mammoth, ebooklib, pymupdf).
+For PDFs, uses PyMuPDF (free, local, no API).
 """
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ import re
 import sys
 from pathlib import Path
 
-SUPPORTED_EXTENSIONS = {".md", ".txt", ".tex", ".latex", ".html", ".htm", ".docx", ".epub"}
+SUPPORTED_EXTENSIONS = {".md", ".txt", ".tex", ".latex", ".html", ".htm", ".docx", ".epub", ".pdf"}
 
 _LATEX_HEADING_RE = re.compile(r"\\(section|subsection|subsubsection|paragraph)\*?\{([^}]*)\}")
 _LATEX_HEADING_LEVEL = {
@@ -78,13 +78,41 @@ def _extract_epub(path: Path) -> str:
     return "\n\n---\n\n".join(chapters)
 
 
+def _extract_pdf(path: Path) -> str:
+    try:
+        import pymupdf
+    except ImportError:
+        import subprocess
+        import sys
+        print("PyMuPDF not found. Installing automatically...", file=sys.stderr)
+        try:
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", "pymupdf"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.PIPE,
+            )
+            import pymupdf
+        except Exception:
+            raise RuntimeError(
+                "Failed to install PyMuPDF automatically. Please run manually:\n"
+                "  pip install pymupdf\n"
+                "PyMuPDF is a free, open-source PDF library. No API key needed.\n"
+                "Alternatively, convert your PDF to markdown first using https://www.datalab.to/playground/documents/new"
+            )
+    doc = pymupdf.open(path)
+    pages = []
+    for page in doc:
+        text = page.get_text("text", sort=True)
+        if text.strip():
+            pages.append(text.strip())
+    doc.close()
+    if not pages:
+        raise RuntimeError(f"No text content found in PDF: {path}")
+    return "\n\n".join(pages)
+
+
 def extract_file(path: Path) -> str:
     ext = path.suffix.lower()
-    if ext == ".pdf":
-        raise RuntimeError(
-            "PDF extraction not supported directly. "
-            "Use: pdftotext input.pdf output.txt  OR  python -m pdfplumber input.pdf > output.txt"
-        )
     if ext in (".md", ".txt", ".markdown"):
         return _extract_plaintext(path)
     if ext in (".tex", ".latex"):
@@ -95,6 +123,8 @@ def extract_file(path: Path) -> str:
         return _extract_docx(path)
     if ext == ".epub":
         return _extract_epub(path)
+    if ext == ".pdf":
+        return _extract_pdf(path)
     raise RuntimeError(f"Unsupported file extension: {ext}")
 
 
